@@ -158,7 +158,7 @@ void menu()
 void cook()
 {
 	
-	if (millis() <= (lastPIDCalculation + pidOutput)) {
+	if ((millis() <= (lastPIDCalculation + pidOutput)) || (pidOutput == TEMPINTERVAL)) {
 		// Power cooker on:
 		digitalWrite(SSR, HIGH);
 		digitalWrite(LED, HIGH);
