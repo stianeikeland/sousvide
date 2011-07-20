@@ -10,11 +10,11 @@
  * - LiquidCrystal: http://www.arduino.cc/en/Tutorial/LiquidCrystal
  *
  * Pins-layout:
- * - LCD: 12, 11, 5, 4, 3, 2
- * - Onewire: 10
- * - SSR: 9
- * - Buttons: 6 (up), 7 (down), 8 (set)
- * - Status LED: 13
+ * - LCD: 11, 12, A0, A1, A2, A3
+ * - Onewire: 5
+ * - SSR: 10
+ * - Buttons: 8 (up), 7 (down), 6 (set)
+ * - Status LED: 9
  */
 
 #define DEBUGMODE
@@ -33,15 +33,16 @@
 #include <DallasTemperature.h>
 #include <PID_v1.h>
 
-#define LCDSIZE 20, 4
+//#define LCDSIZE 20, 4
+#define LCDSIZE 16, 2
 
-#define SSR 9
-#define ONEWIRE 10
-#define BTN_UP 6
+#define SSR 10
+#define ONEWIRE 5
+#define BTN_UP 8
 #define BTN_DOWN 7
-#define BTN_SET 8
-#define LED 13
-#define LCD 12, 11, 5, 4, 3, 2
+#define BTN_SET 6
+#define LED 9
+#define LCD 11, 12, A0, A1, A2, A3
 
 enum programmode {
 	menumode,
@@ -72,7 +73,9 @@ float prevTemperature = -9999.0;
 double pidSetPoint = 60;
 double pidInput, pidOutput;
 
-PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
+//PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
+PID pid(&pidInput, &pidOutput, &pidSetPoint, 200, 90, 300, DIRECT);
+
 
 void setup()
 {
@@ -82,7 +85,7 @@ void setup()
 	lcd.begin(LCDSIZE);
 	lcd.clear();
 	
-	lcd.print("Sous Vide 2000");
+	lcd.print("SousVide-o-Mator");
 	lcd.noCursor();
 	
 	pinMode(SSR, OUTPUT);
@@ -93,10 +96,11 @@ void setup()
 	// Sensor detected?
 	checkSensor();
 	
-	lcd.setCursor(0, 2);
+	//lcd.setCursor(0, 2);
+        lcd.setCursor(0, 1);
 	lcd.print("Sensor detected");
-	lcd.setCursor(0, 3);
-	lcd.print("");
+	//lcd.setCursor(0, 3);
+	//lcd.print("");
 	
 	pid.SetOutputLimits(0, TEMPINTERVAL);
 	pid.SetSampleTime(TEMPINTERVAL);
@@ -112,10 +116,11 @@ void checkSensor()
 	// Wait for sensor and ask user
 	while (sensor.getDeviceCount() == 0)
 	{
-		lcd.setCursor(0, 2);
+		//lcd.setCursor(0, 2);
+		lcd.setCursor(0, 1);
 		lcd.print("No temp-sensor detected,");
-		lcd.setCursor(0, 3);
-		lcd.print("please attach probe..");
+		//lcd.setCursor(0, 3);
+		//lcd.print("please attach probe..");
 	
 		DEBUG("No sensor detected..");
 		delay(1000);
@@ -147,8 +152,9 @@ void menu()
 	}
 	
 	if (changed) {
-		lcd.setCursor(0, 2);
-		lcd.print("Target temperature: ");
+		//lcd.setCursor(0, 2);
+		lcd.setCursor(0, 1);
+		lcd.print("Target temp: ");
 		lcd.print(int(pidSetPoint));
 	}
 	
@@ -185,8 +191,9 @@ void loop()
 		}
 		
 		if (temperature != prevTemperature) {
-			lcd.setCursor(0, 2);
-			lcd.print("Current temperature: ");
+			//lcd.setCursor(0, 2);
+			lcd.setCursor(0, 1);
+			lcd.print("Curr temp: ");
 			lcd.print(temperature, 1);
 			
 			DEBUG("Temperature:");
@@ -205,7 +212,8 @@ void loop()
 	if (btnSet.uniquePress()) {
 		if (mode == menumode) {
 			pid.SetMode(AUTOMATIC);
-			lcd.setCursor(0,1);
+			//lcd.setCursor(0,1);
+			lcd.setCursor(0,0);
 			lcd.print(" - Cooking mode engaged!");
 			DEBUG("Cooking mode..");
 			mode = cooking;
@@ -214,7 +222,8 @@ void loop()
 			pid.SetMode(MANUAL);
 			digitalWrite(SSR, LOW);
 			digitalWrite(LED, LOW);
-			lcd.setCursor(0,1);
+			//lcd.setCursor(0,1);
+			lcd.setCursor(0,0);
 			lcd.print(" - Set target temperature:");
 			DEBUG("Setup mode..");
 			mode = menumode;
