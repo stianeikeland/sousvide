@@ -51,7 +51,6 @@ enum programmode {
 	noprobe
 };
 
-
 programmode mode = startup;
 
 LiquidCrystal lcd(LCD);
@@ -184,7 +183,7 @@ void printScreen()
 			
 		case probedetected:
 			lcd.setCursor(0, 2);
-		    lcd.print("Temp-Sensor detected");
+			lcd.print("Temp-Sensor detected");
 			lcd.setCursor(0, 3);
 			lcd.print("                    ");
 			break;
