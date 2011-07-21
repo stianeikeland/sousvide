@@ -33,8 +33,7 @@
 #include <DallasTemperature.h>
 #include <PID_v1.h>
 
-//#define LCDSIZE 20, 4
-#define LCDSIZE 16, 2
+#define LCDSIZE 20, 4
 
 #define SSR 10
 #define ONEWIRE 5
@@ -46,11 +45,14 @@
 
 enum programmode {
 	menumode,
-	cooking
+	cooking,
+	startup,
+	probedetected,
+	noprobe
 };
 
 
-programmode mode = menumode;
+programmode mode = startup;
 
 LiquidCrystal lcd(LCD);
 
@@ -83,10 +85,7 @@ void setup()
 	DEBUG("Running setup..");
 	
 	lcd.begin(LCDSIZE);
-	lcd.clear();
-	
-	lcd.print("SousVide-o-Mator");
-	lcd.noCursor();
+	printScreen();
 	
 	pinMode(SSR, OUTPUT);
 	pinMode(LED, OUTPUT);
@@ -96,36 +95,33 @@ void setup()
 	// Sensor detected?
 	checkSensor();
 	
-	//lcd.setCursor(0, 2);
-        lcd.setCursor(0, 1);
-	lcd.print("Sensor detected");
-	//lcd.setCursor(0, 3);
-	//lcd.print("");
-	
 	pid.SetOutputLimits(0, TEMPINTERVAL);
 	pid.SetSampleTime(TEMPINTERVAL);
 	
-	delay(1000);
+	delay(2000);
+	mode = menumode;
+	printScreen();
 }
 
 /* Detect sensor, ask user to attach if not.. */
 void checkSensor()
 {
 	DEBUG("Checking sensor..");
+	sensor.begin();
 	
 	// Wait for sensor and ask user
 	while (sensor.getDeviceCount() == 0)
 	{
-		//lcd.setCursor(0, 2);
-		lcd.setCursor(0, 1);
-		lcd.print("No temp-sensor detected,");
-		//lcd.setCursor(0, 3);
-		//lcd.print("please attach probe..");
+		mode = noprobe;
+		printScreen();
 	
 		DEBUG("No sensor detected..");
 		delay(1000);
 		sensor.begin();
 	}
+	
+	mode = probedetected;
+	printScreen();
 	
 	// Set sensor options and request first sample
 	sensor.getAddress(tempDeviceAddress, 0);
@@ -152,13 +148,48 @@ void menu()
 	}
 	
 	if (changed) {
-		//lcd.setCursor(0, 2);
-		lcd.setCursor(0, 1);
-		lcd.print("Target temp: ");
-		lcd.print(int(pidSetPoint));
+		printScreen();
 	}
 	
 	delay(10);
+}
+
+void printScreen()
+{
+	switch(mode) {
+		
+		case startup:
+			lcd.clear();
+			lcd.noCursor();
+		case cooking:
+			lcd.setCursor(0,0); 
+			lcd.print("  SousVide-o-Mator  ");
+			break;
+			
+		case menumode:
+			lcd.setCursor(0,0);
+			lcd.print("  ** Setup mode **  ");
+			lcd.setCursor(0,3);
+			lcd.print(" Target temp: ");
+			lcd.print(int(pidSetPoint));
+			lcd.print(".0 C");
+			break;
+		
+		case noprobe:
+			lcd.setCursor(0, 2);
+			lcd.print("Sensor not detected,");
+			lcd.setCursor(0, 3);
+			lcd.print("please attach probe.");
+			break;
+			
+		case probedetected:
+			lcd.setCursor(0, 2);
+		    lcd.print("Temp-Sensor detected");
+			lcd.setCursor(0, 3);
+			lcd.print("                    ");
+			break;
+			
+	}
 }
 
 void cook()
@@ -183,6 +214,22 @@ void loop()
 	if (millis() - lastTempRequest >= TEMPINTERVAL) {
 		temperature = sensor.getTempCByIndex(0);
 		pidInput = (double)temperature;
+
+		if (temperature <= -100) {
+  			// Probe disconnected?
+			temperature = prevTemperature;
+			pidInput = (double)temperature;
+			
+			// Turn off cooker:
+			digitalWrite(SSR, LOW);
+			digitalWrite(LED, LOW);
+			
+			// Scan for probe, and enter setup
+			// once probe is attached again.
+			checkSensor();
+			mode = menumode;
+			printScreen();
+  		}
 		
 		// Calculate PID value:
 		if (mode == cooking) {
@@ -191,10 +238,10 @@ void loop()
 		}
 		
 		if (temperature != prevTemperature) {
-			//lcd.setCursor(0, 2);
-			lcd.setCursor(0, 1);
-			lcd.print("Curr temp: ");
+			lcd.setCursor(0, 2);
+			lcd.print("Current temp: ");
 			lcd.print(temperature, 1);
+			lcd.print(" C");
 			
 			DEBUG("Temperature:");
 			DEBUG(temperature);
@@ -212,27 +259,23 @@ void loop()
 	if (btnSet.uniquePress()) {
 		if (mode == menumode) {
 			pid.SetMode(AUTOMATIC);
-			//lcd.setCursor(0,1);
-			lcd.setCursor(0,0);
-			lcd.print(" - Cooking mode engaged!");
 			DEBUG("Cooking mode..");
 			mode = cooking;
+			printScreen();
 			
 		} else if (mode == cooking) {
 			pid.SetMode(MANUAL);
 			digitalWrite(SSR, LOW);
 			digitalWrite(LED, LOW);
-			//lcd.setCursor(0,1);
-			lcd.setCursor(0,0);
-			lcd.print(" - Set target temperature:");
 			DEBUG("Setup mode..");
 			mode = menumode;
+			printScreen();
 		}
 	}
 	
 	if (mode == menumode)
 		menu();
-	else
+	else if (mode == cooking)
 		cook();
 	
 }
