@@ -15,6 +15,15 @@
  * Please feel free to use the code for whatever you want,
  * would love to hear about it if you do :)
  *
+ * Components needed:
+ * - Atmega 328 (microcontroller)
+ * - Solid State Relay
+ * - DS18B20 based temperature sensor
+ * - HD77480 LCD panel (20 x 4)
+ * - 3 push buttons
+ * - 16 mhz resonator or crystal
+ * - A few basic resistors, caps, leds and transistors.
+ *
  * Pins-layout:
  * - LCD: 11, 12, A0, A1, A2, A3
  * - Onewire: 5
