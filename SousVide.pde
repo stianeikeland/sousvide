@@ -69,6 +69,9 @@ OneWire oneWire(ONEWIRE);
 DallasTemperature sensor(&oneWire);
 DeviceAddress tempDeviceAddress;
 
+// If you get compilation errors here, you might have a
+// different version of the Button library, try
+// changing PULLUP to BUTTON_PULLUP
 Button btnUp = Button(BTN_UP, PULLUP);
 Button btnDown = Button(BTN_DOWN, PULLUP);
 Button btnSet = Button(BTN_SET, PULLUP);
@@ -81,8 +84,8 @@ float prevTemperature = -9999.0;
 double pidSetPoint = 60;
 double pidInput, pidOutput;
 
-//PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
-PID pid(&pidInput, &pidOutput, &pidSetPoint, 200, 90, 300, DIRECT);
+PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
+//PID pid(&pidInput, &pidOutput, &pidSetPoint, 200, 90, 300, DIRECT);
 
 
 void setup()
