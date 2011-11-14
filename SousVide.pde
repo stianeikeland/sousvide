@@ -84,7 +84,9 @@ float prevTemperature = -9999.0;
 double pidSetPoint = 60;
 double pidInput, pidOutput;
 
-PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
+//These values needs to be tuned to your specific cooker:
+PID pid(&pidInput, &pidOutput, &pidSetPoint, 1.8, 0.3, 200, DIRECT);
+//PID pid(&pidInput, &pidOutput, &pidSetPoint, 2, 5, 1, DIRECT);
 //PID pid(&pidInput, &pidOutput, &pidSetPoint, 200, 90, 300, DIRECT);
 
 
