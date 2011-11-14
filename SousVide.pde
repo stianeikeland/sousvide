@@ -137,7 +137,7 @@ void checkSensor()
 	sensor.setResolution(tempDeviceAddress, RESOLUTION);
 	sensor.setWaitForConversion(false);
 	sensor.requestTemperatures();
-	prevTemperature = millis();
+	lastTempRequest = millis();
 }
 
 void menu()
